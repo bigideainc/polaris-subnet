@@ -1,51 +1,27 @@
-import asyncio
-import math
-import sys
-import time
-import warnings
-from datetime import datetime
-from typing import Dict, List
-
-import requests
-from communex.client import CommuneClient
 from communex.module.module import Module
-from dotenv import load_dotenv
-from loguru import logger
+from communex.client import CommuneClient
 from substrateinterface import Keypair
-
-from compute_subnet.src.neurons.Validator.challenges import (
-    ChallengeGenerator, Verifier)
-from validator.src.validator_node.base._config import ValidatorNodeSettings
-from validator.src.validator_node.base.comx_config import get_node_url
-from validator.src.validator_node.pog import (compare_compute_resources,
-                                              compute_resource_score,
-                                              fetch_compute_specs)
-
+from loguru import logger
+import math
+import warnings
+import sys
+from dotenv import load_dotenv
+from validator.pog import fetch_compute_specs,compare_compute_resources,compute_resource_score
+import time 
+import  asyncio
+from datetime import datetime
+from typing import List,Dict
+import requests
 
 class ValidatorNode(Module):
-    def __init__(self, key: Keypair, settings: ValidatorNodeSettings | None = None) -> None:
+    def __init__(self, key: Keypair, netuid: int, client: CommuneClient, max_allowed_weights: int = 500):
         super().__init__()
-        # Initialize settings
-        self.settings = settings or ValidatorNodeSettings()
         self.key = key
-
-        # Initialize client connection
-        logger.info("Initializing CommuneClient...")
-        self.c_client = CommuneClient(get_node_url(use_testnet=self.settings.use_testnet))
-        
-        # Get network ID
-        try:
-            self.netuid = self.get_netuid(self.c_client)
-            logger.info(f"Retrieved netuid: {self.netuid}")
-        except Exception as e:
-            logger.error(f"Failed to get netuid: {e}")
-            raise
-
-        # Initialize other attributes
-        self.challenge_gen = ChallengeGenerator()
-        self.verifier = Verifier()
+        self.netuid = netuid
+        self.client = client
+        self.max_allowed_weights = max_allowed_weights
         self.miner_data: Dict[str, float] = {}
-        self.container_start_times: Dict[str, datetime] = {}
+        self.container_start_times: Dict[str, datetime] = {}  # {container_id: start_time}
 
     def track_miner_containers(self):
         """Fetch and update active containers for each miner."""
