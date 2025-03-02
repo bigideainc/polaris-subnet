@@ -1,6 +1,6 @@
 from typing import List
 
-from validator.src.validator_node.base.config import PolarisBaseSettings
+from base.config import PolarisBaseSettings
 
 
 class ValidatorSettings(PolarisBaseSettings):
@@ -8,6 +8,6 @@ class ValidatorSettings(PolarisBaseSettings):
     host: str = "0.0.0.0"
     port: int = 8000
     iteration_interval: int = 800
-    max_allowed_weights: int=420
-    subnet_name: str ="mosaic"
+    max_allowed_weights: int=500
+    subnet_name: str ="compute"
     logging_level: str ="INFO"
